@@ -21,7 +21,6 @@ def build_sam_vit_h(checkpoint=None):
     )
 
 
-build_sam = build_sam_vit_h
 
 
 def build_sam_vit_l(checkpoint=None):
@@ -42,6 +41,14 @@ def build_sam_vit_b(checkpoint=None):
         encoder_global_attn_indexes=[2, 5, 8, 11],
         checkpoint=checkpoint,
     )
+
+def build_sam(checkpoint: str):
+    if checkpoint == "sam_vit_h_4b8939.pth": # 636M
+        return build_sam_vit_h(checkpoint)
+    if checkpoint == "sam_vit_l_0b3195.pth": # 308M
+        return build_sam_vit_l(checkpoint)
+    if checkpoint == "sam_vit_b_0b3195.pth": # 91B
+        return build_sam_vit_b(checkpoint)
 
 
 sam_model_registry = {
