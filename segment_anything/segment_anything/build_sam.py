@@ -47,8 +47,10 @@ def build_sam(checkpoint: str):
         return build_sam_vit_h(checkpoint)
     if checkpoint == "sam_vit_l_0b3195.pth": # 308M
         return build_sam_vit_l(checkpoint)
-    if checkpoint == "sam_vit_b_0b3195.pth": # 91B
+    if checkpoint == "sam_vit_b_01ec64.pth": # 91B
         return build_sam_vit_b(checkpoint)
+    else:
+        raise ValueError(f"Invalid checkpoint: {checkpoint}")
 
 
 sam_model_registry = {

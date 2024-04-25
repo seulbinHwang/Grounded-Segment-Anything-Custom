@@ -71,11 +71,17 @@ class ImageProcessingApp:
 
     def _set_object_prompt(self):
         prompts = [
-            object_prompt.ObjectPrompt("person", "blue"),
-            object_prompt.ObjectPrompt("interior wall", "green"),
-            object_prompt.ObjectPrompt("door with a handle", "red"),
-            object_prompt.ObjectPrompt("interior floor", "white"),
-            object_prompt.ObjectPrompt("glass wall", "black")
+            # object_prompt.ObjectPrompt("goal area", "blue"),
+            # object_prompt.ObjectPrompt("grass inside goal post", "blue"),
+            object_prompt.ObjectPrompt("sports ball", "red"),
+            object_prompt.ObjectPrompt("sphere ball", "red"),
+            object_prompt.ObjectPrompt("soccer ball", "red"),
+            object_prompt.ObjectPrompt("futsal ball", "red"),
+            # object_prompt.ObjectPrompt("futsal sphere ball", "red"),
+            # object_prompt.ObjectPrompt("circle ball", "red"),
+            # object_prompt.ObjectPrompt("door with a handle", "red"),
+            # object_prompt.ObjectPrompt("interior floor", "white"),
+            # object_prompt.ObjectPrompt("glass wall", "black")
         ]
         return object_prompt.ObjectsPrompt(prompts)
 
@@ -104,8 +110,9 @@ class ImageProcessingApp:
         for class_idx, a_result_dir_per_class in tqdm(
                 enumerate(result_dir_per_class_list)):
             image_segdet = img_segdet_per_class[class_idx]
-            Image.fromarray(image_segdet).save(
-                os.path.join(a_result_dir_per_class, result_frame_name))
+            if image_segdet is not None:
+                Image.fromarray(image_segdet).save(
+                    os.path.join(a_result_dir_per_class, result_frame_name))
 
     @staticmethod
     def save_result_gif(result_dir_per_class_list: List[str],
@@ -227,6 +234,7 @@ class ImageProcessingApp:
             img_seg = self.draw_seg(img, seg_masks, colors)
         else:
             img_seg = img.copy()
+            return None, None
         img_segdet = self.draw_det(img_seg.copy(), det_boxes_per_class,
                                    det_logits_per_class, det_phrases_per_class,
                                    colors)
@@ -306,6 +314,13 @@ class ImageProcessingApp:
         for i, (xyxy, confidence) in enumerate(
                 zip(detections.xyxy, detections.confidence)):
             color = colors[i]
+            # if confidence is 0.3 ~0.4, color is red.
+            # if confidnec is above 0.4, color is blue.
+            if confidence > 0.4:
+                color = Color.blue()
+            else:
+                color = Color.red()
+
 
             x1, y1, x2, y2 = xyxy.astype(int)
             cv2.rectangle(
@@ -360,7 +375,7 @@ class ImageProcessingApp:
     def run(
         self,
         np_image: np.ndarray,
-        box_threshold: float = 0.3,
+        box_threshold: float = 0.4,
         text_threshold: float = 0.25
     ) -> Tuple[List[torch.Tensor], List[torch.Tensor], List[np.ndarray]]:
         """ 이미지 경로와 텍스트 프롬프트를 사용하여, 객체 탐지 및 세그먼트 과정을 실행하고, 결과 이미지를 생성
@@ -405,16 +420,19 @@ class ImageProcessingApp:
             img_segdet_per_class.append(img_segdet)
         return bounding_boxes_per_class, seg_masks_per_class, img_segdet_per_class
 
-    def run_on_files(self):
+    def run_on_files(self, target_folder):
+        args.target_folder = target_folder
+        self.args.experiment_folder = target_folder
         input_dir = os.path.join(args.input_parent_dir, args.target_folder)
         # 사진 한장을 target한 경우, 에러 뜨게끔 했음
         assert os.path.isdir(input_dir), f"{input_dir} is not a directory."
         # input_frames: /data/test 에 있는 파일들 중, .png 또는 .jpg로 끝나는 파일들
         input_frames = filter(lambda e: e.endswith((".png", ".jpg")),
                               os.listdir(input_dir))
-        input_frames = sorted(input_frames,
-                              key=lambda e: int(os.path.splitext(e)[0]))
-        box_thresholds = [0.4]
+        input_frames = sorted(input_frames)
+        # input_frames = sorted(input_frames,
+        #                       key=lambda e: int(os.path.splitext(e)[0]))
+        box_thresholds = [0.3]
         # result_dir: /results/test
         result_dir = os.path.join(args.result_parent_dir, args.target_folder)
         if not os.path.exists(result_dir):
@@ -482,9 +500,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--result_parent_dir", default="results")
     parser.add_argument("--output_results_segdet_dir", default="results-segdet")
     parser.add_argument(
-        'checkpoint',
-        choices=['b', 'l', 'h'],
-        help="Big model(636M), Large model(308M), Huge model(91M).")
+        '--checkpoint', default="l", type=str,
+        help="Big model(91M), Large model(308M), Huge model(636M).")
     args = parser.parse_args()
     if args.checkpoint == "b":
         args.checkpoint = "sam_vit_b_01ec64.pth"
@@ -498,8 +515,9 @@ def parse_args() -> argparse.Namespace:
 if __name__ == "__main__":
     args = parse_args()
     app = ImageProcessingApp(args)
-    if args.target_folder:
-        app.run_on_files()
+    target_folders = ["2_right", "2_right_cropped"]
+    for target_folder in target_folders:
+        app.run_on_files(target_folder)
     else:
         image = np.zeros((100, 100, 3), dtype=np.uint8)
         app.run_on_realtime(image)
