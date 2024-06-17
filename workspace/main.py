@@ -22,7 +22,7 @@ from groundingdino.util.utils import clean_state_dict
 from segment_anything import SamPredictor, build_sam
 import object_prompt
 import jps_to_gif
-
+import time
 
 class ImageProcessingApp:
 
@@ -422,6 +422,7 @@ class ImageProcessingApp:
             img_segdet_per_class: List[np.ndarray]
                 - 객체 탐지 및 세그먼트 결과 이미지.
         """
+        start_time = time.time()
         # TODO: image_fpath가 directory이면, batch 이미지를 불러오는지 확인
         # object_names_list: ["person", "wall", ... ]
         # det_results_per_class: List[ Tuple[torch.Tensor, torch.Tensor, List[str]] ]
@@ -432,6 +433,7 @@ class ImageProcessingApp:
         bounding_boxes_per_class: List[np.ndarray] = [
             det_results[0] for det_results in det_results_per_class
         ]
+        print(f"Elapsed time: {time.time() - start_time:.2f}s")
         # fused_mask = self.fuse_multiple_masks_with_rank(
         #     seg_masks_per_class,
         #     priorities=np.array(
