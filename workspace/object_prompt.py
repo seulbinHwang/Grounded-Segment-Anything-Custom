@@ -7,6 +7,8 @@ from typing import List, Optional
 class ObjectPrompt:
     prompt: str
     color_str: str
+    box_threshold: float = 0.3
+    rank: Optional[int] = None
     color: Optional[Color] = None
 
     def str_to_color(self, color_str: str) -> Color:
@@ -34,3 +36,9 @@ class ObjectsPrompt:
 
     def get_name_list(self) -> List[str]:
         return [obj.prompt for obj in self.objects]
+
+    def get_box_thresholds(self) -> List[float]:
+        return [obj.box_threshold for obj in self.objects]
+
+    def get_rank_list(self) -> List[Optional[int]]:
+        return [obj.rank for obj in self.objects]

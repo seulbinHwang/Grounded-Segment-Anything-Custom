@@ -38,6 +38,9 @@ class ImageProcessingApp:
             build_sam(checkpoint=args.checkpoint).to(self.device))
         self.objects_prompt = self._set_object_prompt()
         self.object_names_list: List[str] = self.objects_prompt.get_name_list()
+        self.box_thresholds: List[
+            float] = self.objects_prompt.get_box_thresholds()
+        self.ranks: List[Optional[int]] = self.objects_prompt.get_rank_list()
 
     def color_map(self, det_phase: str) -> Color:
         """
@@ -69,24 +72,33 @@ class ImageProcessingApp:
         model.eval()
         return model
 
-    def _set_object_prompt(self):
+    def _set_object_prompt(self) -> object_prompt.ObjectsPrompt:
         prompts = [
-            # object_prompt.ObjectPrompt("goal area", "blue"),
-            # object_prompt.ObjectPrompt("grass inside goal post", "blue"),
-            object_prompt.ObjectPrompt("sports ball", "red"),
-            object_prompt.ObjectPrompt("sphere ball", "red"),
-            object_prompt.ObjectPrompt("soccer ball", "red"),
-            object_prompt.ObjectPrompt("futsal ball", "red"),
-            # object_prompt.ObjectPrompt("futsal sphere ball", "red"),
-            # object_prompt.ObjectPrompt("circle ball", "red"),
-            # object_prompt.ObjectPrompt("door with a handle", "red"),
-            # object_prompt.ObjectPrompt("interior floor", "white"),
-            # object_prompt.ObjectPrompt("glass wall", "black")
+            object_prompt.ObjectPrompt("interior floor",
+                                       "white",
+                                       box_threshold=0.4,
+                                       rank=0),
+            object_prompt.ObjectPrompt("person",
+                                       "blue",
+                                       box_threshold=0.4,
+                                       rank=1),
+            object_prompt.ObjectPrompt("interior wall",
+                                       "green",
+                                       box_threshold=0.4,
+                                       rank=2),
+            object_prompt.ObjectPrompt("door with a handle",
+                                       "red",
+                                       box_threshold=0.4,
+                                       rank=3),
+            object_prompt.ObjectPrompt("glass wall",
+                                       "black",
+                                       box_threshold=0.4,
+                                       rank=4)
         ]
         return object_prompt.ObjectsPrompt(prompts)
 
     def make_a_result_dir(self, box_threshold: float,
-                          result_dir: str) -> Tuple[str, List[str]]:
+                          result_dir: str) -> Tuple[str, List[str], str]:
         # experiment_folder: box_0.4
         experiment_folder = self.args.experiment_folder + f"box_{box_threshold}"
         # a_result_dir: /results/test/box_0.4
@@ -101,30 +113,43 @@ class ImageProcessingApp:
             result_dir_per_class_list.append(a_result_dir_per_class)
             if not os.path.exists(a_result_dir_per_class):
                 os.makedirs(a_result_dir_per_class)
-        return a_result_dir, result_dir_per_class_list
+        result_dir_all = os.path.join(a_result_dir, "all")
+        if not os.path.exists(result_dir_all):
+            os.makedirs(result_dir_all)
+        return a_result_dir, result_dir_per_class_list, result_dir_all
 
     @staticmethod
-    def save_result_image(result_dir_per_class_list: List[str],
+    def save_result_image(result_dir_per_class_list: Union[List[str], str],
                           img_segdet_per_class: List[np.ndarray],
                           result_frame_name: str) -> None:
-        for class_idx, a_result_dir_per_class in tqdm(
-                enumerate(result_dir_per_class_list)):
-            image_segdet = img_segdet_per_class[class_idx]
-            if image_segdet is not None:
-                Image.fromarray(image_segdet).save(
-                    os.path.join(a_result_dir_per_class, result_frame_name))
+        if isinstance(result_dir_per_class_list, str): # save all
+            image_segdet = img_segdet_per_class[0]
+            Image.fromarray(image_segdet).save(
+                os.path.join(result_dir_per_class_list, result_frame_name))
+        else:
+            for class_idx, a_result_dir_per_class in tqdm(
+                    enumerate(result_dir_per_class_list)):
+                image_segdet = img_segdet_per_class[class_idx]
+                if image_segdet is not None:
+                    Image.fromarray(image_segdet).save(
+                        os.path.join(a_result_dir_per_class, result_frame_name))
 
     @staticmethod
-    def save_result_gif(result_dir_per_class_list: List[str],
+    def save_result_gif(result_dir_per_class_list: Union[str, List[str]],
                         a_result_dir: str) -> None:
-        for a_result_dir_per_class in tqdm(result_dir_per_class_list):
-            # results_per_class_dir: /results/test/person
-            # results_segdet_per_class_dir: /results-segdet/test/person
-            # save as gif.
-            class_name = os.path.basename(a_result_dir_per_class)
-            result_gif_path = os.path.join(a_result_dir, class_name + ".gif")
-            jps_to_gif.create_gif_from_images(a_result_dir_per_class,
-                                              result_gif_path)
+        if isinstance(result_dir_per_class_list, str): # save all
+            result_gif_path = os.path.join(a_result_dir, "all.gif")
+            jps_to_gif.create_gif_from_images(result_dir_per_class_list,
+                                                result_gif_path)
+        else:
+            for a_result_dir_per_class in tqdm(result_dir_per_class_list):
+                # results_per_class_dir: /results/test/person
+                # results_segdet_per_class_dir: /results-segdet/test/person
+                # save as gif.
+                class_name = os.path.basename(a_result_dir_per_class)
+                result_gif_path = os.path.join(a_result_dir, class_name + ".gif")
+                jps_to_gif.create_gif_from_images(a_result_dir_per_class,
+                                                  result_gif_path)
 
     def segment(self, image: np.ndarray, boxes: torch.Tensor) -> torch.Tensor:
         """ 주어진 이미지와 바운딩 박스를 사용하여 세그먼트를 수행합니다.
@@ -407,17 +432,47 @@ class ImageProcessingApp:
         bounding_boxes_per_class: List[np.ndarray] = [
             det_results[0] for det_results in det_results_per_class
         ]
-        for det_results, seg_masks in zip(det_results_per_class,
-                                          seg_masks_per_class):
-            # det_results: Tuple[torch.Tensor, torch.Tensor, List[str]]
-            # det_results: (det_boxes, det_logits, det_phrases)
-            # boxes: (n, 4)
-            # logits: (n,)
-            # phrases: List[str]
-            # seg_masks: torch.Tensor # # mask: (N, 1, H, W)
-            # TODO: cp -> seg_masks를 (H, W) 형태로 출력
-            _, img_segdet = self.draw(np_image.copy(), det_results, seg_masks)
-            img_segdet_per_class.append(img_segdet)
+        fused_mask = self.fuse_multiple_masks_with_rank(
+            seg_masks_per_class,
+            priorities=np.array(
+                self.ranks))
+        if self.args.draw_once:
+            all_det_boxes = []
+            all_det_logits = []
+            all_phrases = []
+            all_seg_masks = []
+            for det_results, seg_masks in zip(det_results_per_class,
+                                              seg_masks_per_class):
+                # det_boxes_per_class: (n, 4)
+                # det_logits_per_class: (n,)
+                # det_phrases_per_class: ["person", "person", ... ]
+                # seg_masks: (N, 1, H, W)
+                (det_boxes_per_class, det_logits_per_class,
+                 det_phrases_per_class) = det_results
+                all_det_boxes.append(det_boxes_per_class)
+                all_det_logits.append(det_logits_per_class)
+                all_phrases.extend(det_phrases_per_class)
+                all_seg_masks.extend(seg_masks)
+            # List[np.ndarray] -> np.ndarray
+            all_det_boxes = np.concatenate(all_det_boxes, axis=0) # (n, 4)
+            all_det_logits = np.concatenate(all_det_logits, axis=0) # (n,)
+            all_det_results = (all_det_boxes, all_det_logits, all_phrases)
+            all_seg_masks = np.concatenate(all_seg_masks, axis=0) # (N, 1, H, W)
+            _, all_img_segdet = self.draw(np_image.copy(), all_det_results,
+                                      all_seg_masks)
+            img_segdet_per_class.append(all_img_segdet)
+        else:
+            for det_results, seg_masks in zip(det_results_per_class,
+                                              seg_masks_per_class):
+                # det_results: Tuple[torch.Tensor, torch.Tensor, List[str]]
+                # det_results: (det_boxes, det_logits, det_phrases)
+                # boxes: (n, 4)
+                # logits: (n,)
+                # phrases: List[str]
+                # seg_masks: torch.Tensor # # mask: (N, 1, H, W)
+                # TODO: cp -> seg_masks를 (H, W) 형태로 출력
+                _, img_segdet = self.draw(np_image.copy(), det_results, seg_masks)
+                img_segdet_per_class.append(img_segdet)
         return bounding_boxes_per_class, seg_masks_per_class, img_segdet_per_class
 
     def run_on_files(self, target_folder):
@@ -432,13 +487,13 @@ class ImageProcessingApp:
         input_frames = sorted(input_frames)
         # input_frames = sorted(input_frames,
         #                       key=lambda e: int(os.path.splitext(e)[0]))
-        box_thresholds = [0.3]
-        # result_dir: /results/test
+        box_thresholds = [0.4]
+        # result_dir: /results/test{
         result_dir = os.path.join(args.result_parent_dir, args.target_folder)
         if not os.path.exists(result_dir):
             os.makedirs(result_dir)
         for box_threshold in tqdm(box_thresholds):
-            a_result_dir, result_dir_per_class_list = self.make_a_result_dir(
+            a_result_dir, result_dir_per_class_list, result_dir_all = self.make_a_result_dir(
                 box_threshold, result_dir)
             for a_input_frame in tqdm(input_frames):
                 # a_input_frame: 0660.jpg
@@ -455,13 +510,60 @@ class ImageProcessingApp:
                      np_image=np_image,  # /data/test/0660.jpg
                      box_threshold=box_threshold,
                  )
-                if args.save_result:
-                    self.save_result_image(result_dir_per_class_list,
+
+
+                if self.args.save_result:
+                    if self.args.draw_once:
+                        save_path = result_dir_all
+                    else:
+                        save_path = result_dir_per_class_list
+                    self.save_result_image(save_path,
                                            img_segdet_per_class,
                                            result_frame_name)
 
-            if args.save_result_gif:
-                self.save_result_gif(result_dir_per_class_list, a_result_dir)
+            if self.args.save_result_gif:
+                if self.args.draw_once:
+                    source_path = result_dir_all
+                else:
+                    source_path = result_dir_per_class_list
+                self.save_result_gif(source_path, a_result_dir)
+
+
+    def fuse_multiple_masks_with_rank(self, masks: List[np.ndarray],
+                                      priorities: np.ndarray) -> np.ndarray:
+        """
+        임의 개수의 semantic mask를 합치고
+        각 픽셀에 대해 가장 높은 우선순위를 가진 마스크의 인덱스를 할당하는 함수.
+
+        Args:
+            masks (np.ndarray): (n, h, w) 형태의 semantic masks. n은 마스크의 개수, h와 w는 마스크의 높이와 너비.
+            priorities (np.ndarray): 각 마스크의 우선순위를 나타내는 길이 n의 배열. 낮은 숫자가 높은 우선순위를 의미.
+
+        Returns:
+            np.ndarray: 합쳐진 semantic mask로, 배열 내 값은 가장 높은 우선순위를 가진 마스크의 우선순위 + 1이며, 0은 마스크가 없음을 나타냄.
+        """
+        masks = np.array(masks)  # (n, h, w)
+        n, h, w = masks.shape
+
+        # 결과 마스크 초기화 (높은 값을 가진 초기값 설정)
+        fused_mask = np.full((h, w), fill_value=-1)  # 초기에 모든 값이 -1(마스크 없음 상태)
+
+        # 각 마스크에 대하여 반복
+        for index in range(n):
+            mask = masks[index]
+            # 현재 마스크의 값이 True이고, 현재 우선순위가 결과 마스크의 현재 우선순위보다 높은 경우 값을 갱신
+            update_positions = (mask == 1) & (
+                (fused_mask == -1) |
+                (priorities[fused_mask] > priorities[index]))
+            fused_mask[update_positions] = index
+
+        # 최종 결과를 0(마스크 없음), 우선순위 + 1로 설정
+        final_mask = np.zeros((h, w), dtype=int)
+        # 우선순위가 있는 영역에 대해 우선순위를 +1하여 값을 설정
+        final_mask[fused_mask !=
+                   -1] = priorities[fused_mask[fused_mask != -1]] + 1
+
+        return final_mask
 
     def run_on_realtime(
         self,
@@ -493,6 +595,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     # if target_folder is empty, it means it gets a real-time image.
     parser.add_argument("--target_folder", default="")
+    parser.add_argument("--draw_once", type=bool, default=True)
     parser.add_argument("--save_result", type=bool, default=True)
     parser.add_argument("--save_result_gif", type=bool, default=False)
     parser.add_argument("--experiment_folder", default="")
