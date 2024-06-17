@@ -1,32 +1,46 @@
+import rclpy
+from rclpy.node import Node
+from sensor_msgs.msg import CompressedImage
 import cv2
-import os
 import numpy as np
-from rosbag2_py import Reader, StorageOptions, ConverterOptions
+import os
 
 # Bag 파일과 토픽 설정
 bag_file_path = '~/d064_dataset_3laps_manual/d064_dynamic_0.db3'
 topic_name = 'rgb3'
 
 # 이미지를 저장할 디렉토리 생성
-output_directory = 'workspace/data/images'
-os.makedirs(output_directory, exist_ok=True)
 
-# Bag 파일 열기
-storage_options = StorageOptions(uri=bag_file_path, storage_id='sqlite3')
-converter_options = ConverterOptions()
-reader = Reader()
-reader.open(storage_options, converter_options)
+class ImageSubscriber(Node):
+    def __init__(self):
+        super().__init__('image_subscriber')
+        self.subscription = self.create_subscription(
+            CompressedImage,
+            'rgb3',
+            self.listener_callback,
+            10)
+        self.subscription  # prevent unused variable warning
+        self.img_count = 0
+        self.save_path = 'workspace/data/images'
+        os.makedirs(self.save_path, exist_ok=True)
 
-# 토픽과 일치하는 메시지를 찾아 처리
-if reader.has_next():
-    for (topic, data, timestamp) in reader.read_messages(topics=[topic_name]):
-        np_arr = np.frombuffer(data.data, np.uint8)
-        image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)  # CompressedImage는 JPEG 포맷으로 디코드
+    def listener_callback(self, msg):
+        np_arr = np.frombuffer(msg.data, np.uint8)
+        image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        if image_np is not None:
+            img_filename = f"{self.save_path}/image_{self.img_count}.jpg"
+            cv2.imwrite(img_filename, image_np)
+            self.get_logger().info(f'Saved {img_filename}')
+            self.img_count += 1
+        else:
+            self.get_logger().warn('Failed to decode image')
 
-        # 이미지 파일로 저장
-        image_filename = f'{output_directory}/image_{timestamp}.jpg'
-        cv2.imwrite(image_filename, image_np)
-        print(f'Saved {image_filename}')
+def main(args=None):
+    rclpy.init(args=args)
+    image_subscriber = ImageSubscriber()
+    rclpy.spin(image_subscriber)
+    image_subscriber.destroy_node()
+    rclpy.shutdown()
 
-# Reader 닫기
-reader.close()
+if __name__ == '__main__':
+    main()
