@@ -596,7 +596,7 @@ class ImageProcessingApp:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     # if target_folder is empty, it means it gets a real-time image.
-    parser.add_argument("--target_folder", default="")
+    parser.add_argument("--target_folder", default="images")
     parser.add_argument("--draw_once", type=bool, default=True)
     parser.add_argument("--save_result", type=bool, default=True)
     parser.add_argument("--save_result_gif", type=bool, default=False)
