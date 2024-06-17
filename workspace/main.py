@@ -432,10 +432,10 @@ class ImageProcessingApp:
         bounding_boxes_per_class: List[np.ndarray] = [
             det_results[0] for det_results in det_results_per_class
         ]
-        fused_mask = self.fuse_multiple_masks_with_rank(
-            seg_masks_per_class,
-            priorities=np.array(
-                self.ranks))
+        # fused_mask = self.fuse_multiple_masks_with_rank(
+        #     seg_masks_per_class,
+        #     priorities=np.array(
+        #         self.ranks))
         if self.args.draw_once:
             all_det_boxes = []
             all_det_logits = []
