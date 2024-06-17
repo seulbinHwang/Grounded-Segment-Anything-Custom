@@ -83,15 +83,15 @@ class ImageProcessingApp:
                                        box_threshold=0.4,
                                        rank=1),
             object_prompt.ObjectPrompt("interior wall",
-                                       "green",
+                                       "black",
                                        box_threshold=0.4,
                                        rank=2),
             object_prompt.ObjectPrompt("door with a handle",
                                        "red",
                                        box_threshold=0.4,
                                        rank=3),
-            object_prompt.ObjectPrompt("glass wall",
-                                       "black",
+            object_prompt.ObjectPrompt("plant",
+                                       "green",
                                        box_threshold=0.4,
                                        rank=4)
         ]
