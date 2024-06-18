@@ -620,7 +620,7 @@ def parse_args() -> argparse.Namespace:
 if __name__ == "__main__":
     args = parse_args()
     app = ImageProcessingApp(args)
-    target_folders = ["2_right", "2_right_cropped"]
+    target_folders = ["images"]
     for target_folder in target_folders:
         app.run_on_files(target_folder)
     else:
