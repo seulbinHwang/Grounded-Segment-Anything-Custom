@@ -465,12 +465,12 @@ class ImageProcessingApp:
                 print("seg_masks.shape", seg_masks.shape)
             # List[np.ndarray] -> np.ndarray
             if all_det_boxes:
-                all_det_boxes = np.concatenate(all_det_boxes, axis=0) # (n, 4)
+                all_det_boxes = torch.cat(all_det_boxes, axis=0) # (n, 4)
             if all_det_logits:
-                all_det_logits = np.concatenate(all_det_logits, axis=0) # (n,)
+                all_det_logits = torch.cat(all_det_logits, axis=0) # (n,)
             all_det_results = (all_det_boxes, all_det_logits, all_phrases)
             if all_seg_masks:
-                all_seg_masks = np.concatenate(all_seg_masks, axis=0) # (N, 1, H, W)
+                all_seg_masks = torch.cat(all_seg_masks, axis=0) # (N, 1, H, W)
             print("all_seg_masks.shape", all_seg_masks.shape)
             _, all_img_segdet = self.draw(np_image.copy(), all_det_results,
                                       all_seg_masks)
