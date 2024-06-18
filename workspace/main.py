@@ -605,7 +605,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--result_parent_dir", default="results")
     parser.add_argument("--output_results_segdet_dir", default="results-segdet")
     parser.add_argument(
-        '--checkpoint', default="l", type=str,
+        '--checkpoint', default="h", type=str,
         help="Big model(91M), Large model(308M), Huge model(636M).")
     args = parser.parse_args()
     if args.checkpoint == "b":
