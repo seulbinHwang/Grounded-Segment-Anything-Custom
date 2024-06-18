@@ -20,7 +20,7 @@ def make_gif_from_images(image_dir: str, gif_path: str, duration: int = 150) -> 
     files = sorted(os.listdir(image_dir), key=lambda x: int(re.search(r'\d+', x).group()))
     images = [Image.open(os.path.join(image_dir, file)) for file in files if file.endswith((".png", ".jpg", ".jpeg"))]
     # get 1000 images.
-    images = images[:2000]
+    # images = images[:2000]
 
     # 첫 번째 이미지를 기준으로 GIF 생성
     if images:
@@ -29,5 +29,5 @@ def make_gif_from_images(image_dir: str, gif_path: str, duration: int = 150) -> 
 # 사용 예:
 if __name__ == '__main__':
     image_directory = 'results/images/0958_box_0.4/all'
-    output_gif_path = 'results/images/0958_box_0.4/animation_2000_.gif'
+    output_gif_path = 'results/images/0958_box_0.4/animation_all_.gif'
     make_gif_from_images(image_directory, output_gif_path)
