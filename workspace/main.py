@@ -657,3 +657,9 @@ if __name__ == "__main__":
     else:
         image = np.zeros((100, 100, 3), dtype=np.uint8)
         app.run_on_realtime(image)
+    """
+    b: 2.2초
+    l: 4.6초
+    h: 6.3초
+
+    """
