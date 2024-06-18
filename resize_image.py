@@ -19,8 +19,8 @@ def resize_images(source_dir: str, new_width: int, new_height: int) -> None:
 
             # 이미지 열기 및 크기 조정
             with Image.open(source_path) as img:
-                resized_img: Image.Image = img.resize(target_size,
-                                                      Image.ANTIALIAS)
+                resized_img = img.resize(target_size,
+                                         Image.Resampling.LANCZOS)  # ANTIALIAS 대신 LANCZOS 사용
 
                 # 변경된 크기의 이미지 저장
                 resized_img.save(target_path)
