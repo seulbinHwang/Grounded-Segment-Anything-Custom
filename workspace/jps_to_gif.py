@@ -28,6 +28,6 @@ def make_gif_from_images(image_dir: str, gif_path: str, duration: int = 150) -> 
 
 # 사용 예:
 if __name__ == '__main__':
-    image_directory = 'results/images/0958_box_0.4/all'
-    output_gif_path = 'results/images/0958_box_0.4/animation_all_.gif'
+    image_directory = 'results/images/1227_box_0.4/all'
+    output_gif_path = 'results/images/1227_box_0.4/animation_all_.gif'
     make_gif_from_images(image_directory, output_gif_path)
