@@ -256,6 +256,7 @@ class ImageProcessingApp:
         if fill:
             img = np.zeros_like(img)
         if seg_masks.shape[0] > 0:
+            print("seg_masks.shape", seg_masks.shape)
             img_seg = self.draw_seg(img, seg_masks, colors)
         else:
             img_seg = img.copy()
@@ -455,11 +456,13 @@ class ImageProcessingApp:
                 all_det_logits.append(det_logits_per_class)
                 all_phrases.extend(det_phrases_per_class)
                 all_seg_masks.extend(seg_masks)
+                print("seg_masks.shape", seg_masks.shape)
             # List[np.ndarray] -> np.ndarray
             all_det_boxes = np.concatenate(all_det_boxes, axis=0) # (n, 4)
             all_det_logits = np.concatenate(all_det_logits, axis=0) # (n,)
             all_det_results = (all_det_boxes, all_det_logits, all_phrases)
             all_seg_masks = np.concatenate(all_seg_masks, axis=0) # (N, 1, H, W)
+            print("all_seg_masks.shape", all_seg_masks.shape)
             _, all_img_segdet = self.draw(np_image.copy(), all_det_results,
                                       all_seg_masks)
             img_segdet_per_class.append(all_img_segdet)
