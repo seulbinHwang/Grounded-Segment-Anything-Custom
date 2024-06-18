@@ -94,6 +94,14 @@ class ImageProcessingApp:
             object_prompt.ObjectPrompt("plant",
                                        "green",
                                        box_threshold=0.4,
+                                       rank=4),
+            object_prompt.ObjectPrompt("chair",
+                                       "yellow",
+                                       box_threshold=0.4,
+                                       rank=4),
+            object_prompt.ObjectPrompt("desk",
+                                       "roboflow",
+                                       box_threshold=0.4,
                                        rank=4)
         ]
         return object_prompt.ObjectsPrompt(prompts)
