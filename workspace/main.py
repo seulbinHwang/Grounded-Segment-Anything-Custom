@@ -461,7 +461,7 @@ class ImageProcessingApp:
                 all_det_boxes.append(det_boxes_per_class)
                 all_det_logits.append(det_logits_per_class)
                 all_phrases.extend(det_phrases_per_class)
-                all_seg_masks.extend(seg_masks)
+                all_seg_masks.append(seg_masks)
                 print("seg_masks.shape", seg_masks.shape)
             # List[np.ndarray] -> np.ndarray
             if all_det_boxes:
