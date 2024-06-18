@@ -100,7 +100,7 @@ class ImageProcessingApp:
                                        box_threshold=0.4,
                                        rank=4),
             object_prompt.ObjectPrompt("desk",
-                                       "roboflow",
+                                       "purple",
                                        box_threshold=0.4,
                                        rank=4)
         ]
