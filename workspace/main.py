@@ -248,6 +248,10 @@ class ImageProcessingApp:
             seg_masks: torch.Tensor
                 - mask: (N, 1, H, W)
         """
+        if isinstance(seg_masks, list):
+            img_seg = img.copy()
+            return img_seg, img_seg
+
         # det_phrases_per_class: ["person", "person", ... ]
         (det_boxes_per_class, det_logits_per_class,
          det_phrases_per_class) = det_results
@@ -260,7 +264,7 @@ class ImageProcessingApp:
             img_seg = self.draw_seg(img, seg_masks, colors)
         else:
             img_seg = img.copy()
-            return None, None
+            return img_seg, img_seg
         img_segdet = self.draw_det(img_seg.copy(), det_boxes_per_class,
                                    det_logits_per_class, det_phrases_per_class,
                                    colors)
@@ -450,6 +454,8 @@ class ImageProcessingApp:
                 # det_logits_per_class: (n,)
                 # det_phrases_per_class: ["person", "person", ... ]
                 # seg_masks: (N, 1, H, W)
+                if seg_masks.shape[0] == 0:
+                    continue
                 (det_boxes_per_class, det_logits_per_class,
                  det_phrases_per_class) = det_results
                 all_det_boxes.append(det_boxes_per_class)
@@ -458,10 +464,13 @@ class ImageProcessingApp:
                 all_seg_masks.extend(seg_masks)
                 print("seg_masks.shape", seg_masks.shape)
             # List[np.ndarray] -> np.ndarray
-            all_det_boxes = np.concatenate(all_det_boxes, axis=0) # (n, 4)
-            all_det_logits = np.concatenate(all_det_logits, axis=0) # (n,)
+            if all_det_boxes:
+                all_det_boxes = np.concatenate(all_det_boxes, axis=0) # (n, 4)
+            if all_det_logits:
+                all_det_logits = np.concatenate(all_det_logits, axis=0) # (n,)
             all_det_results = (all_det_boxes, all_det_logits, all_phrases)
-            all_seg_masks = np.concatenate(all_seg_masks, axis=0) # (N, 1, H, W)
+            if all_seg_masks:
+                all_seg_masks = np.concatenate(all_seg_masks, axis=0) # (N, 1, H, W)
             print("all_seg_masks.shape", all_seg_masks.shape)
             _, all_img_segdet = self.draw(np_image.copy(), all_det_results,
                                       all_seg_masks)
