@@ -75,15 +75,15 @@ class ImageProcessingApp:
 
     def _set_object_prompt(self) -> object_prompt.ObjectsPrompt:
         prompts = [
-            object_prompt.ObjectPrompt("interior floor",
+            object_prompt.ObjectPrompt("floor",
                                        "white",
-                                       box_threshold=0.4,
+                                       box_threshold=0.35,
                                        rank=0),
             object_prompt.ObjectPrompt("person",
                                        "blue",
                                        box_threshold=0.4,
                                        rank=1),
-            object_prompt.ObjectPrompt("interior wall",
+            object_prompt.ObjectPrompt("wall",
                                        "black",
                                        box_threshold=0.4,
                                        rank=2),
@@ -97,11 +97,11 @@ class ImageProcessingApp:
                                        rank=4),
             object_prompt.ObjectPrompt("chair",
                                        "yellow",
-                                       box_threshold=0.4,
+                                       box_threshold=0.5,
                                        rank=4),
             object_prompt.ObjectPrompt("desk",
                                        "purple",
-                                       box_threshold=0.4,
+                                       box_threshold=0.5,
                                        rank=4)
         ]
         return object_prompt.ObjectsPrompt(prompts)

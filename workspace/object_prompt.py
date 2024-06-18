@@ -1,7 +1,10 @@
 import dataclasses
 from supervision.draw.color import Color
 from typing import List, Optional
+"""
+3.75초
 
+"""
 
 @dataclasses.dataclass
 class ObjectPrompt:
