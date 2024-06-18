@@ -30,12 +30,12 @@ def resize_images(source_dir: str, new_width: int, new_height: int) -> None:
 def main() -> None:
     parser: argparse.ArgumentParser = argparse.ArgumentParser(
         description='Resize images to specified dimensions and save them to a new directory.')
-    parser.add_argument('source_directory', type=str,
+    parser.add_argument('--source_directory', type=str,
                         help='The directory where the source images are stored.',
                         default='workspace/data/images')
-    parser.add_argument('width', type=int,
+    parser.add_argument('--width', type=int,
                         help='The width of the resized images.')
-    parser.add_argument('height', type=int,
+    parser.add_argument('--height', type=int,
                         help='The height of the resized images.')
 
     args: argparse.Namespace = parser.parse_args()
