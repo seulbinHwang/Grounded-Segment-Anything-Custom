@@ -24,9 +24,9 @@ class ObjectPrompt:
         elif color_str == "black":
             return Color.black()
         elif color_str == "yellow":
-            return Color.yellow()
-        elif color_str == "roboflow":
-            return Color.roboflow()
+            return Color(r=255, g=255, b=0)
+        elif color_str == "purple":
+            return Color(r=128, g=0, b=128)
         else:
             raise ValueError(f"Invalid color string: {color_str}")
 
