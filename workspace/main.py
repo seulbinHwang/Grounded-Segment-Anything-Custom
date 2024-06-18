@@ -100,7 +100,7 @@ class ImageProcessingApp:
     def make_a_result_dir(self, box_threshold: float,
                           result_dir: str) -> Tuple[str, List[str], str]:
         # experiment_folder: box_0.4
-        experiment_folder = self.args.experiment_folder + f"box_{box_threshold}"
+        experiment_folder = self.args.experiment_folder + f"_box_{box_threshold}"
         # a_result_dir: /results/test/box_0.4
         a_result_dir = os.path.join(result_dir, experiment_folder)
         if not os.path.exists(a_result_dir):
@@ -491,7 +491,6 @@ class ImageProcessingApp:
 
     def run_on_files(self, target_folder):
         args.target_folder = target_folder
-        self.args.experiment_folder = target_folder
         input_dir = os.path.join(args.input_parent_dir, args.target_folder)
         # 사진 한장을 target한 경우, 에러 뜨게끔 했음
         assert os.path.isdir(input_dir), f"{input_dir} is not a directory."
@@ -619,7 +618,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--result_parent_dir", default="results")
     parser.add_argument("--output_results_segdet_dir", default="results-segdet")
     parser.add_argument(
-        '--checkpoint', default="h", type=str,
+        '--checkpoint', default="l", type=str,
         help="Big model(91M), Large model(308M), Huge model(636M).")
     args = parser.parse_args()
     if args.checkpoint == "b":
