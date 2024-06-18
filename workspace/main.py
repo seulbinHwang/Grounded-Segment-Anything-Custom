@@ -23,6 +23,7 @@ from segment_anything import SamPredictor, build_sam
 import object_prompt
 import jps_to_gif
 import time
+import re
 
 class ImageProcessingApp:
 
@@ -489,6 +490,14 @@ class ImageProcessingApp:
                 img_segdet_per_class.append(img_segdet)
         return bounding_boxes_per_class, seg_masks_per_class, img_segdet_per_class
 
+    # 파일명에서 숫자를 추출하는 함수
+    @staticmethod
+    def extract_number(filename):
+        match = re.search(r'\d+', filename)
+        if match:
+            return int(match.group(0))
+        return 0  # 파일명에 숫자가 없는 경우
+
     def run_on_files(self, target_folder):
         args.target_folder = target_folder
         input_dir = os.path.join(args.input_parent_dir, args.target_folder)
@@ -497,7 +506,7 @@ class ImageProcessingApp:
         # input_frames: /data/test 에 있는 파일들 중, .png 또는 .jpg로 끝나는 파일들
         input_frames = filter(lambda e: e.endswith((".png", ".jpg")),
                               os.listdir(input_dir))
-        input_frames = sorted(input_frames)
+        input_frames = sorted(input_frames, key=self.extract_number)
         # input_frames = sorted(input_frames,
         #                       key=lambda e: int(os.path.splitext(e)[0]))
         box_thresholds = [0.4]
