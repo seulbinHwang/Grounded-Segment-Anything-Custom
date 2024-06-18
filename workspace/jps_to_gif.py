@@ -25,6 +25,7 @@ def make_gif_from_images(image_dir: str, gif_path: str, duration: int = 150) -> 
         images[0].save(gif_path, save_all=True, append_images=images[1:], optimize=False, duration=duration, loop=0)
 
 # 사용 예:
-image_directory = 'results/images/0958_box_0.4/all'
-output_gif_path = 'results/images/0958_box_0.4/animation.gif'
-make_gif_from_images(image_directory, output_gif_path)
+if __name__ == '__main__':
+    image_directory = 'results/images/0958_box_0.4/all'
+    output_gif_path = 'results/images/0958_box_0.4/animation.gif'
+    make_gif_from_images(image_directory, output_gif_path)
