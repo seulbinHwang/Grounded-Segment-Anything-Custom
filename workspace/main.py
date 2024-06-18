@@ -471,7 +471,7 @@ class ImageProcessingApp:
             all_det_results = (all_det_boxes, all_det_logits, all_phrases)
             if all_seg_masks:
                 all_seg_masks = torch.cat(all_seg_masks, axis=0) # (N, 1, H, W)
-            print("all_seg_masks.shape", all_seg_masks.shape)
+                print("all_seg_masks.shape", all_seg_masks.shape)
             _, all_img_segdet = self.draw(np_image.copy(), all_det_results,
                                       all_seg_masks)
             img_segdet_per_class.append(all_img_segdet)
@@ -541,6 +541,8 @@ class ImageProcessingApp:
                 else:
                     source_path = result_dir_per_class_list
                 self.save_result_gif(source_path, a_result_dir)
+
+
 
 
     def fuse_multiple_masks_with_rank(self, masks: List[np.ndarray],
@@ -626,6 +628,7 @@ def parse_args() -> argparse.Namespace:
         args.checkpoint = "sam_vit_l_0b3195.pth"
     elif args.checkpoint == "h":
         args.checkpoint = "sam_vit_h_4b8939.pth"
+        # wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth
     return args
 
 
